@@ -1,0 +1,12 @@
+{
+  "name": "basic-demo",
+  "scripts": {
+    "dev": "bun run --hot src/jsx.tsx"
+  },
+  "dependencies": {
+    "hono": "^4.5.9"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

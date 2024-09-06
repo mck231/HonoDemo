@@ -1,12 +1,26 @@
-import type { FC } from 'hono/jsx';
-import {getDatabase} from "../testDatabase";
+import { FC, useState, useEffect } from 'hono/jsx';
+import { getDatabase } from './data/setupDatabase';
 
-const PeriodicTable: FC = async () => {
-    const db = getDatabase();
-    const elementsInDb = db.query('SELECT * FROM elements ORDER BY grid_position').all();
+const PeriodicTable: FC = () => {
+    const [elements, setElements] = useState<any[]>([]);
+
+    // Fetch elements when the component is mounted
+    useEffect(() => {
+        const fetchElements = async () => {
+            try {
+                const db = getDatabase();
+                const elementsInDb = db.query('SELECT * FROM elements ORDER BY grid_position').all();
+                setElements(elementsInDb);  // Update state with the fetched elements
+            } catch (error) {
+                console.error('Error fetching elements:', error);
+            }
+        };
+
+        fetchElements();
+    }, []);  // Empty dependency array ensures this effect runs once when the component mounts
 
     // Map each element to a JSX component
-    const elementsJSX = elementsInDb.map((el: any) => (
+    const elementsJSX = elements.map((el: any) => (
         <div
             key={el.atomic_number}
             style={{
@@ -53,4 +67,11 @@ const PeriodicTable: FC = async () => {
     );
 };
 
-export default PeriodicTable;
+export const App: FC = () => {
+    return (
+        <div>
+            <h1>Counter Example</h1>
+            <PeriodicTable />
+        </div>
+    );
+};

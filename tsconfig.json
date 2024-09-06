@@ -6,6 +6,8 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "types": ["bun-types"],
+    "include": ["src/**/*.ts", "src/**/*.tsx"]
   }
 }

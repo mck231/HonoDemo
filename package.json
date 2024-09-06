@@ -1,12 +1,16 @@
 {
-  "name": "basic-demo",
+  "name": "hono-bun-jsx",
   "scripts": {
-    "dev": "bun run --hot src/jsx.tsx"
+    "dev": "bun build src/client.tsx --outdir ./static --outfile client.js && bun run --hot src/index.tsx",
+    "start:db": "bun run src/data/setupDatabase.ts",
+    "shutdown:db": "bun run src/data/shutdownDatabase.ts",
+    "start": "npm run start:db && npm run dev",
+    "stop": "npm run shutdown:db"
   },
   "dependencies": {
-    "hono": "^4.5.9"
+    "hono": "^4.5.10"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "^1.1.8"
   }
 }

@@ -4,6 +4,7 @@ import PeriodicTable from './components/PeriodicTable';
 import '../static/demo/styles.css';
 import {dropElementsTable, getDatabase, setupDatabase} from '../data/setupDatabase';
 import UserForm from "./components/UserForm";
+import {App} from "./App";
 
 const app = new Hono();
 
@@ -35,8 +36,11 @@ app.get('/', (c) => {
             </style>
         </head>
         <body>
-        <UserForm />
-        <PeriodicTable />
+        <div id="root">
+            <App /> {/* Render the App component on the server */}
+
+        </div>
+        <script src="/static/client.js" type="module"></script>
         </body>
         </html>
     );

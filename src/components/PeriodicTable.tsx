@@ -1,14 +1,37 @@
-import type { FC } from 'hono/jsx';
-import { getDatabase } from '../../data/setupDatabase';
+import { FC, useEffect, useState } from 'hono/jsx';
 
-const PeriodicTable: FC = async () => {
-    const db = getDatabase();
-    const elementsInDb = db.query('SELECT * FROM elements ORDER BY grid_position').all();
+interface PeriodicTableProps {
+    onElementClick: (elementId: number) => void;
+}
 
-    // Map each element to a JSX component
-    const elementsJSX = elementsInDb.map((el: any) => (
+const PeriodicTable: FC<PeriodicTableProps> = ({ onElementClick }) => {
+    const [elements, setElements] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchElements = async () => {
+            try {
+                const response = await fetch('/api/elements');
+                const data = await response.json();
+                setElements(data);
+            } catch (error) {
+                console.error('Error fetching elements:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchElements();
+    }, []);
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    const elementsJSX = elements.map((el: any) => (
         <div
             key={el.atomic_number}
+            onClick={() => onElementClick(el.element_id)} // Trigger the click handler
             style={{
                 border: '1px solid #ccc',
                 textAlign: 'center',
@@ -25,6 +48,7 @@ const PeriodicTable: FC = async () => {
                 overflow: 'hidden',
                 gridColumnStart: el.grid_position % 18 + 1,
                 gridRowStart: Math.floor(el.grid_position / 18) + 1,
+                cursor: 'pointer' // Add a pointer cursor for clarity
             }}
         >
             <div style={{ fontSize: '0.8em', color: '#888' }}>{el.atomic_number}</div>

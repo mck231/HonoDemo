@@ -1,11 +1,14 @@
 import { FC, useEffect, useState } from 'hono/jsx';
 
-const PeriodicTable: FC = () => {
+interface PeriodicTableProps {
+    onElementClick: (elementId: number) => void;
+}
+
+const PeriodicTable: FC<PeriodicTableProps> = ({ onElementClick }) => {
     const [elements, setElements] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Fetch elements from the API when the component is mounted
         const fetchElements = async () => {
             try {
                 const response = await fetch('/api/elements');
@@ -28,6 +31,7 @@ const PeriodicTable: FC = () => {
     const elementsJSX = elements.map((el: any) => (
         <div
             key={el.atomic_number}
+            onClick={() => onElementClick(el.element_id)} // Trigger the click handler
             style={{
                 border: '1px solid #ccc',
                 textAlign: 'center',
@@ -44,6 +48,7 @@ const PeriodicTable: FC = () => {
                 overflow: 'hidden',
                 gridColumnStart: el.grid_position % 18 + 1,
                 gridRowStart: Math.floor(el.grid_position / 18) + 1,
+                cursor: 'pointer' // Add a pointer cursor for clarity
             }}
         >
             <div style={{ fontSize: '0.8em', color: '#888' }}>{el.atomic_number}</div>

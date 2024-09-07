@@ -16,7 +16,7 @@ const UserForm: FC = () => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px' }}>
-            <button onClick={fetchElements} style={{ marginBottom: '10px' }}>Fetch Elements</button>
+            <button onClick={fetchElements} style={{ marginBottom: '10px' }}>Fetch All Elements</button>
             <textarea value={elements} readOnly style={{ width: '300px', height: '200px' }} />
         </div>
     );

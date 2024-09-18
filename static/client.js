@@ -314,11 +314,8 @@ var documentMetadataTag = (tag, children2, props, sort) => {
 };
 var title = ({ children: children2, ...props }) => {
   const nameSpaceContext = getNameSpaceContext();
-  if (nameSpaceContext) {
-    const context4 = useContext(nameSpaceContext);
-    if (context4 === "svg" || context4 === "head") {
-      return new JSXNode("title", props, toArray(children2 ?? []));
-    }
+  if (nameSpaceContext && useContext(nameSpaceContext) === "svg") {
+    new JSXNode("title", props, toArray(children2 ?? []));
   }
   return documentMetadataTag("title", children2, props, false);
 };
@@ -326,8 +323,7 @@ var script = ({
   children: children2,
   ...props
 }) => {
-  const nameSpaceContext = getNameSpaceContext();
-  if (["src", "async"].some((k) => !props[k]) || nameSpaceContext && useContext(nameSpaceContext) === "head") {
+  if (["src", "async"].some((k) => !props[k])) {
     return returnWithoutSpecialBehavior("script", children2, props);
   }
   return documentMetadataTag("script", children2, props, false);
@@ -350,10 +346,6 @@ var link = ({ children: children2, ...props }) => {
   return documentMetadataTag("link", children2, props, "precedence" in props);
 };
 var meta = ({ children: children2, ...props }) => {
-  const nameSpaceContext = getNameSpaceContext();
-  if (nameSpaceContext && useContext(nameSpaceContext) === "head") {
-    return returnWithoutSpecialBehavior("meta", children2, props);
-  }
   return documentMetadataTag("meta", children2, props, false);
 };
 var newJSXNode = (tag, { children: children2, ...props }) => new JSXNode(tag, props, toArray(children2 ?? []));
@@ -579,7 +571,7 @@ var jsxFn = (tag, props, children2) => {
     return new JSXFunctionNode(tag, props, children2);
   } else if (exports_components[tag]) {
     return new JSXFunctionNode(exports_components[tag], props, children2);
-  } else if (tag === "svg" || tag === "head") {
+  } else if (tag === "svg") {
     nameSpaceContext ||= createContext2("");
     return new JSXNode(tag, props, [
       new JSXFunctionNode(nameSpaceContext, {
@@ -1657,11 +1649,11 @@ var ErrorBoundary2 = async ({ children: children4, fallback, fallbackRender, onE
     const index = errorBoundaryCounter++;
     const replaceRe = RegExp(`(<template id="E:${index}"></template>.*?)(.*?)(<!--E:${index}-->)`);
     const caught = false;
-    const catchCallback = ({ error: error2, buffer }) => {
+    const catchCallback = ({ error, buffer }) => {
       if (caught) {
         return "";
       }
-      const fallbackResString = fallbackRes(error2);
+      const fallbackResString = fallbackRes(error);
       if (buffer) {
         buffer[0] = buffer[0].replace(replaceRe, fallbackResString);
       }
@@ -1675,17 +1667,12 @@ d.replaceWith(c.content)
 })(document)
 </script>`;
     };
-    let error;
-    const promiseAll = Promise.all(resArray).catch((e) => error = e);
     return raw(`<template id="E:${index}"></template><!--E:${index}-->`, [
       ({ phase, buffer, context: context12 }) => {
         if (phase === HtmlEscapedCallbackPhase.BeforeStream) {
           return;
         }
-        return promiseAll.then(async (htmlArray) => {
-          if (error) {
-            throw error;
-          }
+        return Promise.all(resArray).then(async (htmlArray) => {
           htmlArray = htmlArray.flat();
           const content = htmlArray.join("");
           let html8 = buffer ? "" : `<template data-hono-target="E:${index}">${content}</template><script>
@@ -1729,9 +1716,9 @@ n.remove()
 d.remove()
 })(document)
 </script>`), content2.callbacks);
-          }).catch((error2) => catchCallback({ error: error2, buffer })));
+          }).catch((error) => catchCallback({ error, buffer })));
           return raw(html8, promises);
-        }).catch((error2) => catchCallback({ error: error2, buffer }));
+        }).catch((error) => catchCallback({ error, buffer }));
       }
     ]);
   } else {
@@ -1835,6 +1822,7 @@ function jsxDEV2(tag, props, key) {
 // src/components/PeriodicTable.tsx
 var PeriodicTable = ({ onElementClick }) => {
   const [elements, setElements] = useState([]);
+  const [elementName, setElementName] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchElements = async () => {
@@ -1842,6 +1830,7 @@ var PeriodicTable = ({ onElementClick }) => {
         const response = await fetch("/api/elements");
         const data = await response.json();
         setElements(data);
+        setElementName(data.name);
       } catch (error) {
         console.error("Error fetching elements:", error);
       } finally {
@@ -1856,7 +1845,7 @@ var PeriodicTable = ({ onElementClick }) => {
     }, undefined, false, undefined, this);
   }
   const elementsJSX = elements.map((el) => /* @__PURE__ */ jsxDEV2("div", {
-    onClick: () => onElementClick(el.element_id),
+    onClick: () => onElementClick(el.element_id, el.name),
     style: {
       border: "1px solid #ccc",
       textAlign: "center",
@@ -2053,11 +2042,58 @@ var ElementInfo = ({ elementId }) => {
 };
 var ElementInfo_default = ElementInfo;
 
+// src/components/ElementWiki.tsx
+var ElementWiki = ({ elementName }) => {
+  const [wikiData, setWikiData] = useState(null);
+  useEffect(() => {
+    if (elementName !== null) {
+      const fetchWikiData = async () => {
+        try {
+          const response = await fetch(`/api/wiki/${elementName}`);
+          const data = await response.json();
+          const extract = data.extract ? data.extract : data;
+          setWikiData(extract);
+        } catch (error) {
+          console.error("Error fetching wiki data:", error);
+          setWikiData(null);
+        }
+      };
+      fetchWikiData();
+    }
+  }, [elementName]);
+  return /* @__PURE__ */ jsxDEV2("div", {
+    style: { display: "flex", flexDirection: "column", alignItems: "center", margin: "20px" },
+    children: wikiData ? /* @__PURE__ */ jsxDEV2("div", {
+      style: {
+        width: "500px",
+        height: "400px",
+        border: "1px solid #ccc",
+        padding: "10px",
+        borderRadius: "5px",
+        overflowY: "auto"
+      },
+      children: [
+        /* @__PURE__ */ jsxDEV2("h3", {
+          children: "Wikipedia Information"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsxDEV2("div", {
+          dangerouslySetInnerHTML: { __html: wikiData }
+        }, undefined, false, undefined, this)
+      ]
+    }, undefined, true, undefined, this) : /* @__PURE__ */ jsxDEV2("p", {
+      children: "Select an element to view more info"
+    }, undefined, false, undefined, this)
+  }, undefined, false, undefined, this);
+};
+var ElementWiki_default = ElementWiki;
+
 // src/App.tsx
 var App = () => {
   const [selectedElementId, setSelectedElementId] = useState(null);
-  const handleElementClick = (elementId) => {
+  const [selectedElementName, setElementName] = useState(null);
+  const handleElementClick = (elementId, elementName) => {
     setSelectedElementId(elementId);
+    setElementName(elementName);
   };
   return /* @__PURE__ */ jsxDEV2("div", {
     children: [
@@ -2067,6 +2103,10 @@ var App = () => {
           /* @__PURE__ */ jsxDEV2(UserForm_default, {}, undefined, false, undefined, this),
           /* @__PURE__ */ jsxDEV2(ElementInfo_default, {
             elementId: selectedElementId
+          }, undefined, false, undefined, this),
+          " ",
+          /* @__PURE__ */ jsxDEV2(ElementWiki_default, {
+            elementName: selectedElementName
           }, undefined, false, undefined, this),
           " "
         ]

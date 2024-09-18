@@ -1,9 +1,7 @@
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
-import PeriodicTable from './components/PeriodicTable';
 import '../static/demo/styles.css';
 import {dropElementsTable, getDatabase, setupDatabase} from '../data/setupDatabase';
-import UserForm from "./components/UserForm";
 import {App} from "./App";
 
 const app = new Hono();
@@ -37,10 +35,15 @@ app.get('/api/element/:element_id', async (c) => {
 // Here we'll do the wikipedia api search for element info
 app.get('/api/wiki/:element_name', async (c) => {
     const elementName = c.req.param('element_name');
-    const response = await fetch(`https://api.wikimedia.org/core/v1/wikipedia/en/page/${elementName}/description`,
-        {headers: {'Authorization': `Bearer ${process.env.Access_token}`}});
+
+    const response = await fetch(`https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles=${elementName}`,
+        //{headers: {'Authorization': `Bearer ${process.env.Access_token}`}}
+    );
     const data = await response.json();
-    return c.json(data);
+    const wikiData = data.query.pages;
+    const page = Object.values(wikiData)[0] as { extract: string }
+    return c.json(page.extract);
+
 });
 
 // Route to serve the main HTML page

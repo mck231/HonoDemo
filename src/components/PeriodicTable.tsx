@@ -1,11 +1,12 @@
 import { FC, useEffect, useState } from 'hono/jsx';
 
 interface PeriodicTableProps {
-    onElementClick: (elementId: number) => void;
+    onElementClick: (elementId: number, elementName: string) => void;
 }
 
 const PeriodicTable: FC<PeriodicTableProps> = ({ onElementClick }) => {
     const [elements, setElements] = useState<any[]>([]);
+    const [elementName, setElementName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -14,6 +15,7 @@ const PeriodicTable: FC<PeriodicTableProps> = ({ onElementClick }) => {
                 const response = await fetch('/api/elements');
                 const data = await response.json();
                 setElements(data);
+                setElementName(data.name);
             } catch (error) {
                 console.error('Error fetching elements:', error);
             } finally {
@@ -31,7 +33,7 @@ const PeriodicTable: FC<PeriodicTableProps> = ({ onElementClick }) => {
     const elementsJSX = elements.map((el: any) => (
         <div
             key={el.atomic_number}
-            onClick={() => onElementClick(el.element_id)} // Trigger the click handler
+            onClick={() => onElementClick(el.element_id, el.name)} // Trigger the click handler
             style={{
                 border: '1px solid #ccc',
                 textAlign: 'center',
